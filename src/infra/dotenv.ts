@@ -74,6 +74,13 @@ const BLOCKED_WORKSPACE_DOTENV_KEYS = new Set([
   "OPENCLAW_SHOW_SECRETS",
   "OPENCLAW_SKIP_BROWSER_CONTROL_SERVER",
   "OPENCLAW_STATE_DIR",
+  "QUANTCLAW_CONFIG_PATH",
+  "QUANTCLAW_HOME",
+  "QUANTCLAW_INCLUDE_ROOTS",
+  "QUANTCLAW_LIVE_EXCHANGE",
+  "QUANTCLAW_LIVE_TRADING",
+  "QUANTCLAW_MAX_ORDER_NOTIONAL",
+  "QUANTCLAW_STATE_DIR",
   "OPENCLAW_TEST_TAILSCALE_BINARY",
   "PI_CODING_AGENT_DIR",
   "PATH",
@@ -104,7 +111,33 @@ const BLOCKED_WORKSPACE_DOTENV_PREFIXES = [
   "OPENCLAW_DISABLE_",
   "OPENCLAW_SKIP_",
   "OPENCLAW_UPDATE_",
+  "QUANTCLAW_",
 ];
+
+const QUANTCLAW_ENV_ALIASES: ReadonlyArray<readonly [quantclaw: string, inherited: string]> = [
+  ["QUANTCLAW_CONFIG_PATH", "OPENCLAW_CONFIG_PATH"],
+  ["QUANTCLAW_GATEWAY_PASSWORD", "OPENCLAW_GATEWAY_PASSWORD"],
+  ["QUANTCLAW_GATEWAY_TOKEN", "OPENCLAW_GATEWAY_TOKEN"],
+  ["QUANTCLAW_HOME", "OPENCLAW_HOME"],
+  ["QUANTCLAW_INCLUDE_ROOTS", "OPENCLAW_INCLUDE_ROOTS"],
+  ["QUANTCLAW_LIVE_ANTHROPIC_KEY", "OPENCLAW_LIVE_ANTHROPIC_KEY"],
+  ["QUANTCLAW_LIVE_GEMINI_KEY", "OPENCLAW_LIVE_GEMINI_KEY"],
+  ["QUANTCLAW_LIVE_OPENAI_KEY", "OPENCLAW_LIVE_OPENAI_KEY"],
+  ["QUANTCLAW_LOAD_SHELL_ENV", "OPENCLAW_LOAD_SHELL_ENV"],
+  ["QUANTCLAW_SHELL_ENV_TIMEOUT_MS", "OPENCLAW_SHELL_ENV_TIMEOUT_MS"],
+  ["QUANTCLAW_STATE_DIR", "OPENCLAW_STATE_DIR"],
+  ["QUANTCLAW_TWITCH_ACCESS_TOKEN", "OPENCLAW_TWITCH_ACCESS_TOKEN"],
+];
+
+export function applyQuantClawEnvAliases(env: NodeJS.ProcessEnv = process.env): void {
+  for (const [quantclawKey, inheritedKey] of QUANTCLAW_ENV_ALIASES) {
+    const value = env[quantclawKey]?.trim();
+    if (!value || env[inheritedKey]?.trim()) {
+      continue;
+    }
+    env[inheritedKey] = value;
+  }
+}
 
 function shouldBlockWorkspaceRuntimeDotEnvKey(key: string): boolean {
   return isDangerousHostEnvVarName(key) || isDangerousHostEnvOverrideVarName(key);
@@ -193,6 +226,7 @@ export function loadWorkspaceDotEnvFile(filePath: string, opts?: { quiet?: boole
     }
     process.env[key] = value;
   }
+  applyQuantClawEnvAliases();
 }
 
 function loadParsedDotEnvFiles(files: LoadedDotEnvFile[]) {
@@ -239,6 +273,7 @@ function loadParsedDotEnvFiles(files: LoadedDotEnvFile[]) {
       { keptPath: conflict.keptPath, ignoredPath: conflict.ignoredPath, keys },
     );
   }
+  applyQuantClawEnvAliases();
 }
 
 export function loadGlobalRuntimeDotEnvFiles(opts?: { quiet?: boolean; stateEnvPath?: string }) {

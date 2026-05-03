@@ -1,8 +1,15 @@
 {
   "name": "quantclaw",
   "version": "2026.5.3",
-  "description": "Multi-channel AI gateway with extensible messaging integrations",
-  "keywords": [],
+  "description": "Crypto trading assistant for market research, paper trading, Telegram workflows, and guarded live-trading alpha.",
+  "keywords": [
+    "crypto",
+    "market-research",
+    "paper-trading",
+    "quantclaw",
+    "telegram-bot",
+    "trading"
+  ],
   "homepage": "https://github.com/adinarayanan2003/quantclaw#readme",
   "bugs": {
     "url": "https://github.com/adinarayanan2003/quantclaw/issues"
@@ -14,7 +21,6 @@
     "url": "git+https://github.com/adinarayanan2003/quantclaw.git"
   },
   "bin": {
-    "openclaw": "openclaw.mjs",
     "quantclaw": "quantclaw.mjs"
   },
   "directories": {

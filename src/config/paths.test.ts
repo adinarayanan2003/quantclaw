@@ -103,39 +103,39 @@ describe("gateway port resolution", () => {
 });
 
 describe("state + config path candidates", () => {
-  function expectOpenClawHomeDefaults(env: NodeJS.ProcessEnv): void {
-    const configuredHome = env.OPENCLAW_HOME;
+  function expectQuantClawHomeDefaults(env: NodeJS.ProcessEnv): void {
+    const configuredHome = env.QUANTCLAW_HOME ?? env.OPENCLAW_HOME;
     if (!configuredHome) {
-      throw new Error("OPENCLAW_HOME must be set for this assertion helper");
+      throw new Error("QUANTCLAW_HOME must be set for this assertion helper");
     }
     const resolvedHome = path.resolve(configuredHome);
-    expect(resolveStateDir(env)).toBe(path.join(resolvedHome, ".openclaw"));
+    expect(resolveStateDir(env)).toBe(path.join(resolvedHome, ".quantclaw"));
 
     const candidates = resolveDefaultConfigCandidates(env);
-    expect(candidates[0]).toBe(path.join(resolvedHome, ".openclaw", "openclaw.json"));
+    expect(candidates[0]).toBe(path.join(resolvedHome, ".quantclaw", "quantclaw.json"));
   }
 
-  it("uses OPENCLAW_STATE_DIR when set", () => {
+  it("uses QUANTCLAW_STATE_DIR when set", () => {
     const env = {
-      OPENCLAW_STATE_DIR: "/new/state",
+      QUANTCLAW_STATE_DIR: "/new/state",
     } as NodeJS.ProcessEnv;
 
     expect(resolveStateDir(env, () => "/home/test")).toBe(path.resolve("/new/state"));
   });
 
-  it("uses OPENCLAW_HOME for default state/config locations", () => {
+  it("uses QUANTCLAW_HOME for default state/config locations", () => {
     const env = {
-      OPENCLAW_HOME: "/srv/openclaw-home",
+      QUANTCLAW_HOME: "/srv/quantclaw-home",
     } as NodeJS.ProcessEnv;
-    expectOpenClawHomeDefaults(env);
+    expectQuantClawHomeDefaults(env);
   });
 
-  it("prefers OPENCLAW_HOME over HOME for default state/config locations", () => {
+  it("prefers QUANTCLAW_HOME over HOME for default state/config locations", () => {
     const env = {
-      OPENCLAW_HOME: "/srv/openclaw-home",
+      QUANTCLAW_HOME: "/srv/quantclaw-home",
       HOME: "/home/other",
     } as NodeJS.ProcessEnv;
-    expectOpenClawHomeDefaults(env);
+    expectQuantClawHomeDefaults(env);
   });
 
   it("orders default config candidates in a stable order", () => {
@@ -143,17 +143,22 @@ describe("state + config path candidates", () => {
     const resolvedHome = path.resolve(home);
     const candidates = resolveDefaultConfigCandidates({} as NodeJS.ProcessEnv, () => home);
     const expected = [
+      path.join(resolvedHome, ".quantclaw", "quantclaw.json"),
+      path.join(resolvedHome, ".quantclaw", "openclaw.json"),
+      path.join(resolvedHome, ".quantclaw", "clawdbot.json"),
+      path.join(resolvedHome, ".openclaw", "quantclaw.json"),
       path.join(resolvedHome, ".openclaw", "openclaw.json"),
       path.join(resolvedHome, ".openclaw", "clawdbot.json"),
+      path.join(resolvedHome, ".clawdbot", "quantclaw.json"),
       path.join(resolvedHome, ".clawdbot", "openclaw.json"),
       path.join(resolvedHome, ".clawdbot", "clawdbot.json"),
     ];
     expect(candidates).toEqual(expected);
   });
 
-  it("prefers ~/.openclaw when it exists and legacy dir is missing", async () => {
+  it("prefers ~/.quantclaw when it exists and legacy dir is missing", async () => {
     await withTempDir({ prefix: "openclaw-state-" }, async (root) => {
-      const newDir = path.join(root, ".openclaw");
+      const newDir = path.join(root, ".quantclaw");
       await fs.mkdir(newDir, { recursive: true });
       const resolved = resolveStateDir({} as NodeJS.ProcessEnv, () => root);
       expect(resolved).toBe(newDir);
@@ -189,9 +194,9 @@ describe("state + config path candidates", () => {
       await fs.writeFile(legacyConfig, "{}", "utf-8");
 
       const overrideDir = path.join(root, "override");
-      const env = { OPENCLAW_STATE_DIR: overrideDir } as NodeJS.ProcessEnv;
+      const env = { QUANTCLAW_STATE_DIR: overrideDir } as NodeJS.ProcessEnv;
       const resolved = resolveConfigPath(env, overrideDir, () => root);
-      expect(resolved).toBe(path.join(overrideDir, "openclaw.json"));
+      expect(resolved).toBe(path.join(overrideDir, "quantclaw.json"));
     });
   });
 });

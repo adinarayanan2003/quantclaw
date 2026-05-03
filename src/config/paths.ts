@@ -17,17 +17,17 @@ export function resolveIsNixMode(env: NodeJS.ProcessEnv = process.env): boolean 
 
 export const isNixMode = resolveIsNixMode();
 
-// Support the remaining legacy pre-rebrand state dir.
-const LEGACY_STATE_DIRNAMES = [".clawdbot"] as const;
-const NEW_STATE_DIRNAME = ".openclaw";
-const CONFIG_FILENAME = "openclaw.json";
-const LEGACY_CONFIG_FILENAMES = ["clawdbot.json"] as const;
+// Support inherited OpenClaw and older pre-rebrand state/config locations.
+const LEGACY_STATE_DIRNAMES = [".openclaw", ".clawdbot"] as const;
+const NEW_STATE_DIRNAME = ".quantclaw";
+const CONFIG_FILENAME = "quantclaw.json";
+const LEGACY_CONFIG_FILENAMES = ["openclaw.json", "clawdbot.json"] as const;
 
 function resolveDefaultHomeDir(): string {
   return resolveRequiredHomeDir(process.env, os.homedir);
 }
 
-/** Build a homedir thunk that respects OPENCLAW_HOME for the given env. */
+/** Build a homedir thunk that respects QUANTCLAW_HOME for the given env. */
 function envHomedir(env: NodeJS.ProcessEnv): () => string {
   return () => resolveRequiredHomeDir(env, os.homedir);
 }
@@ -54,15 +54,16 @@ export function resolveNewStateDir(homedir: () => string = resolveDefaultHomeDir
 
 /**
  * State directory for mutable data (sessions, logs, caches).
- * Can be overridden via OPENCLAW_STATE_DIR.
- * Default: ~/.openclaw
+ * Can be overridden via QUANTCLAW_STATE_DIR, with OPENCLAW_STATE_DIR kept as a
+ * legacy fallback.
+ * Default: ~/.quantclaw
  */
 export function resolveStateDir(
   env: NodeJS.ProcessEnv = process.env,
   homedir: () => string = envHomedir(env),
 ): string {
   const effectiveHomedir = () => resolveRequiredHomeDir(env, homedir);
-  const override = env.OPENCLAW_STATE_DIR?.trim();
+  const override = env.QUANTCLAW_STATE_DIR?.trim() || env.OPENCLAW_STATE_DIR?.trim();
   if (override) {
     return resolveUserPath(override, env, effectiveHomedir);
   }
@@ -98,21 +99,22 @@ function resolveUserPath(
 
 /**
  * Optional allowlist of directories that `$include` directives may resolve
- * outside the config directory. Set via `OPENCLAW_INCLUDE_ROOTS` as a
- * platform-delimited path list (`:` on POSIX, `;` on Windows).
+ * outside the config directory. Set via `QUANTCLAW_INCLUDE_ROOTS` as a
+ * platform-delimited path list (`:` on POSIX, `;` on Windows). The inherited
+ * OPENCLAW_INCLUDE_ROOTS name is accepted as a legacy fallback.
  *
  * Each entry is tilde-expanded and resolved to an absolute path. Entries that
  * cannot be resolved or that are not absolute after expansion are dropped.
  *
  * Returns an empty array when the var is unset or contains no usable entries,
  * preserving the historical behavior where `$include` is confined to the
- * directory containing `openclaw.json`.
+ * directory containing `quantclaw.json`.
  */
 export function resolveIncludeRoots(
   env: NodeJS.ProcessEnv = process.env,
   homedir: () => string = envHomedir(env),
 ): string[] {
-  const raw = env.OPENCLAW_INCLUDE_ROOTS?.trim();
+  const raw = env.QUANTCLAW_INCLUDE_ROOTS?.trim() || env.OPENCLAW_INCLUDE_ROOTS?.trim();
   if (!raw) {
     return [];
   }
@@ -140,14 +142,15 @@ export const STATE_DIR = resolveStateDir();
 
 /**
  * Config file path (JSON or JSON5).
- * Can be overridden via OPENCLAW_CONFIG_PATH.
- * Default: ~/.openclaw/openclaw.json (or $OPENCLAW_STATE_DIR/openclaw.json)
+ * Can be overridden via QUANTCLAW_CONFIG_PATH, with OPENCLAW_CONFIG_PATH kept as
+ * a legacy fallback.
+ * Default: ~/.quantclaw/quantclaw.json (or $QUANTCLAW_STATE_DIR/quantclaw.json)
  */
 export function resolveCanonicalConfigPath(
   env: NodeJS.ProcessEnv = process.env,
   stateDir: string = resolveStateDir(env, envHomedir(env)),
 ): string {
-  const override = env.OPENCLAW_CONFIG_PATH?.trim();
+  const override = env.QUANTCLAW_CONFIG_PATH?.trim() || env.OPENCLAW_CONFIG_PATH?.trim();
   if (override) {
     return resolveUserPath(override, env, envHomedir(env));
   }
@@ -187,14 +190,14 @@ export function resolveConfigPath(
   stateDir: string = resolveStateDir(env, envHomedir(env)),
   homedir: () => string = envHomedir(env),
 ): string {
-  const override = env.OPENCLAW_CONFIG_PATH?.trim();
+  const override = env.QUANTCLAW_CONFIG_PATH?.trim() || env.OPENCLAW_CONFIG_PATH?.trim();
   if (override) {
     return resolveUserPath(override, env, homedir);
   }
   if (env.OPENCLAW_TEST_FAST === "1") {
     return path.join(stateDir, CONFIG_FILENAME);
   }
-  const stateOverride = env.OPENCLAW_STATE_DIR?.trim();
+  const stateOverride = env.QUANTCLAW_STATE_DIR?.trim() || env.OPENCLAW_STATE_DIR?.trim();
   const candidates = [
     path.join(stateDir, CONFIG_FILENAME),
     ...LEGACY_CONFIG_FILENAMES.map((name) => path.join(stateDir, name)),
@@ -230,7 +233,7 @@ export function resolveDefaultConfigCandidates(
   homedir: () => string = envHomedir(env),
 ): string[] {
   const effectiveHomedir = () => resolveRequiredHomeDir(env, homedir);
-  const explicit = env.OPENCLAW_CONFIG_PATH?.trim();
+  const explicit = env.QUANTCLAW_CONFIG_PATH?.trim() || env.OPENCLAW_CONFIG_PATH?.trim();
   if (explicit) {
     return [resolveUserPath(explicit, env, effectiveHomedir)];
   }

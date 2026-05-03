@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { loadCliDotEnv } from "../cli/dotenv.js";
-import { loadDotEnv, loadWorkspaceDotEnvFile } from "./dotenv.js";
+import { applyQuantClawEnvAliases, loadDotEnv, loadWorkspaceDotEnvFile } from "./dotenv.js";
 
 const loggerMocks = vi.hoisted(() => ({
   warn: vi.fn(),
@@ -70,6 +70,23 @@ function expectEnvUndefined(keys: readonly string[]) {
     expect(process.env[key]).toBeUndefined();
   }
 }
+
+describe("applyQuantClawEnvAliases", () => {
+  it("maps QuantClaw env names to inherited runtime env names without overriding explicit inherited values", () => {
+    const env = {
+      QUANTCLAW_GATEWAY_TOKEN: "quant-token",
+      QUANTCLAW_CONFIG_PATH: "~/.quantclaw/quantclaw.json",
+      OPENCLAW_GATEWAY_PASSWORD: "explicit-password",
+      QUANTCLAW_GATEWAY_PASSWORD: "quant-password",
+    } as NodeJS.ProcessEnv;
+
+    applyQuantClawEnvAliases(env);
+
+    expect(env.OPENCLAW_GATEWAY_TOKEN).toBe("quant-token");
+    expect(env.OPENCLAW_CONFIG_PATH).toBe("~/.quantclaw/quantclaw.json");
+    expect(env.OPENCLAW_GATEWAY_PASSWORD).toBe("explicit-password");
+  });
+});
 
 async function withIsolatedEnvAndCwd(run: () => Promise<void>) {
   const prevEnv = { ...process.env };

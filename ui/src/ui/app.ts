@@ -140,7 +140,7 @@ function resolveOnboardingMode(): boolean {
   return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
 }
 
-export class OpenClawApp extends LitElement {
+export class QuantClawApp extends LitElement {
   private i18nController = new I18nController(this);
   clientInstanceId = generateUUID();
   connectGeneration = 0;
@@ -1165,6 +1165,10 @@ export class OpenClawApp extends LitElement {
   }
 }
 
+if (!customElements.get("quantclaw-app")) {
+  customElements.define("quantclaw-app", QuantClawApp);
+}
+
 if (!customElements.get("openclaw-app")) {
-  customElements.define("openclaw-app", OpenClawApp);
+  customElements.define("openclaw-app", QuantClawApp);
 }
