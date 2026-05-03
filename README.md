@@ -1,3 +1,17 @@
+# QuantClaw — Crypto Trading Assistant Fork of OpenClaw
+
+QuantClaw is a crypto-focused fork of OpenClaw for research, paper trading, Telegram workflows, and a guarded Binance live-trading alpha.
+
+The primary CLI command is:
+
+```sh
+quantclaw
+```
+
+The inherited `openclaw` command remains available for compatibility while the fork is being renamed internally. See [docs/quantclaw.md](docs/quantclaw.md) for current fork notes and trading guardrails.
+
+---
+
 # 🦞 OpenClaw — Personal AI Assistant
 
 <p align="center">
